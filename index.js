@@ -19,25 +19,47 @@ var c = new Crawler({
 let page = 2954;
 
 let theUrl = `https://www.ehistory.go.kr/page/photo/nation_index.jsp?page=${page}&yearCheck=&typeCheck=&searchCategory=whole&searchText=&pageSize=10&subjectID=&orderBy=orderByDate&orderAsc=DESC&input_sdate=1980&input_edate=1990&listType=list`
+let arr = [];
 
-axios.get(theUrl)
+function scrapData(theUrl) {
+return axios.get(theUrl)
     .then((res) =>{
         const $ = cheerio.load(res.data);      
-        const list = '#container > div.bbs_basic_list2';
-        const num = 1;
+        const list = '#container > div.bbs_basic_list2';        
         const classes = $(list).children();
+        const length = classes.length;        
+        for (let num = 1; num <= length; num++) {                
+        //const num = 1;        
+
+        let obj = {};
         const child = list + ` > div:nth-child(${num})`;
         const photo = child + ` > div > a > img`;
         const photoText = child + ` > dl`;
         const title = photoText + ` > dt > a`;
         const titleExp = photoText + ` > dd`;
         const expText = titleExp + ' > p'
-        const length = classes.length;
         const photoNum = $(photo).attr('src');
         const getTitle = $(title).text();
         const getExp = $(titleExp).text();
         const getText = $(expText).text();
-        const date = getExp.match(/\d+.\d+.\d+/g)[0];
+        let date = getExp.match(/\d+.\d+.\d+/g)[0];        
+        let splitDate = date.split('.')
+        let targetDate = parseInt(splitDate[1]);
+        let targetMonth = parseInt(splitDate[2]);
+        let today = new Date;
+        let getDate = today.getDate();
+        let getMonth = today.getMonth();
+        //if (targetDate === getDate && targetMonth === getMonth) {}
+
+        obj.src= photoNum;
+        obj.title = getTitle;
+        obj.text = getText;
+        obj.date = splitDate;
+        obj.exp = getExp;
+        obj.order = num;
+
+        arr.push(obj);
+
         //console.log(classes)
         //console.log(length)
         console.log(photoNum)
@@ -45,6 +67,9 @@ axios.get(theUrl)
         //console.log(getExp)
         console.log(getText)
         console.log(date)
+        }
+        console.log(arr);
+        console.log(page, theUrl, 'in func')
         //#container > div.bbs_basic_list2
         let response = {
             statusCode: 200,
@@ -53,4 +78,15 @@ axios.get(theUrl)
       
           return response;
       
+          })
+        }
+
+scrapData(theUrl)
+          .then((res) => {
+              if (arr[0].order === 1) {
+                  page--;                  
+                  theUrl = `https://www.ehistory.go.kr/page/photo/nation_index.jsp?page=${page}&yearCheck=&typeCheck=&searchCategory=whole&searchText=&pageSize=10&subjectID=&orderBy=orderByDate&orderAsc=DESC&input_sdate=1980&input_edate=1990&listType=list`;
+                  console.log(page, theUrl, 'in if')
+                  return scrapData(theUrl);
+              } else return //twit
           })
