@@ -16,10 +16,18 @@ var c = new Crawler({
     }
 });
 
-let page = 2954;
+function rewriteUrl(page) {
+  return `https://www.ehistory.go.kr/page/photo/nation_index.jsp?page=${page}&yearCheck=&typeCheck=&searchCategory=whole&searchText=&pageSize=10&subjectID=&orderBy=orderByDate&orderAsc=DESC&input_sdate=1980&input_edate=1990&listType=list`
+
+}
+
+let page;
+	//2665;
 
 let theUrl = `https://www.ehistory.go.kr/page/photo/nation_index.jsp?page=${page}&yearCheck=&typeCheck=&searchCategory=whole&searchText=&pageSize=10&subjectID=&orderBy=orderByDate&orderAsc=DESC&input_sdate=1980&input_edate=1990&listType=list`
-let arr = [];
+let arts = {};
+let order = 0;
+let thisYear = new Date().getFullYear().toString();
 
 function scrapData(theUrl) {
 return axios.get(theUrl)
@@ -31,7 +39,7 @@ return axios.get(theUrl)
         for (let num = 1; num <= length; num++) {                
         //const num = 1;        
 
-        let obj = {};
+        //let obj = {};
         const child = list + ` > div:nth-child(${num})`;
         const photo = child + ` > div > a > img`;
         const photoText = child + ` > dl`;
@@ -44,23 +52,28 @@ return axios.get(theUrl)
         const getText = $(expText).text();
         let date = getExp.match(/\d+.\d+.\d+/g)[0];        
         let splitDate = date.split('.')
-        let targetDate = parseInt(splitDate[1]);
-        let targetMonth = parseInt(splitDate[2]);
+        let targetDate = parseInt(splitDate[2]);
+        let targetMonth = parseInt(splitDate[1]);
         let today = new Date;
+	let getFullYear = today.getFullYear();		
         let getDate = today.getDate();
-        let getMonth = today.getMonth();
+        let getMonth = today.getMonth() + 1
+		console.log(splitDate);
+		console.log('targetDate:')
+		console.log(targetDate, parseInt(getDate), targetMonth, parseInt(getMonth))
+	if (targetDate === parseInt(getDate) && targetMonth === parseInt(getMonth)) {		
+	order++;		
         //if (targetDate === getDate && targetMonth === getMonth) {}
-
-        obj.src= photoNum;
-        obj.title = getTitle;
-        obj.text = getText;
-        obj.date = splitDate;
-        obj.exp = getExp;
-        obj.order = num;
-
-        arr.push(obj);
-
-        //console.log(classes)
+        arts[order + 1] = {};	
+        arts[order + 1].src= photoNum;
+        arts[order + 1].title = getTitle;
+        arts[order + 1].text = getText;
+        arts[order + 1].date = splitDate;
+        arts[order + 1].exp = getExp;
+	}
+console.log(Date.parse(`${getFullYear}-${splitDate[1]}-${splitDate[2]}`) - Date.now())
+ 	if (Date.parse(`${getFullYear}-${splitDate[1]}-${splitDate[2]}`) - Date.now() > 0) return false;		
+	        //console.log(classes)
         //console.log(length)
         console.log(photoNum)
         console.log(getTitle)
@@ -68,19 +81,71 @@ return axios.get(theUrl)
         console.log(getText)
         console.log(date)
         }
-        console.log(arr);
-        console.log(page, theUrl, 'in func')
-        //#container > div.bbs_basic_list2
-        let response = {
-            statusCode: 200,
-            //body: JSON.stringify(tweet)    
-          }
-      
-          return response;
-      
+        return true; 
           })
+	.then((res) => {
+	                  page--;                  
+	  console.log(page)
+		console.log('day same', res);
+                  theUrl = rewriteUrl(page);
+		  console.log(page, theUrl, 'in if')
+                  if (res) return scrapData(theUrl)
+		  else return;
+	})
         }
+/*
+  for (let i = 0; i < 1; i++) {
+  let lastTime = arts[order].exp;
+  let lastYear = lastTime[0][3];	  
+  let lastMont = lastTime[1];
+  let lastDay = lastTime[2];	 
+  let isLeftedArts = Date.parse(`${thisYear}-${lastMont}-${lastDay}`) - Date.now() < 0 ? false : true;	  
+  if (thisYear[3] === lastYear) {
+    
+  } else {};
+  }
+  */
+let serverUrl = 'http://hotisred.xyz';
+let lastPage = serverUrl + '/users/get_last';
 
+async function getLastPage(lastPage) {
+return await axios.get(lastPage)
+	.then(res => {
+		console.log('from server:',res.data)
+		page = res.data.name;
+		return res.data.name;
+	})
+}
+getLastPage(lastPage)
+. then((res) => {
+	console.log(page)
+	page = res;
+	theUrl = rewriteUrl(page);
+ 	return scrapData(theUrl)
+})
+/*
+          .then((res) => {
+  let lastTime = arts[order].date;
+  let lastYear = lastTime[0][3];	  
+  let lastMont = lastTime[1];
+  let lastDay = lastTime[2];	 
+  let isLeftedArts = Date.parse(`${thisYear}-${lastMont}-${lastDay}`) - Date.now() < 0 ? true: false;	
+		 // console.log('articles',arts)
+		 // console.log('order',order)
+		  console.log(lastTime, lastYear)
+		  console.log(thisYear)
+		  console.log(isLeftedArts)
+  if (parseInt(thisYear[3]) === parseInt(lastYear) && isLeftedArts) {
+                  page--;                  
+	  console.log(page)
+                  theUrl = `https://www.ehistory.go.kr/page/photo/nation_index.jsp?page=${page}&yearCheck=&typeCheck=&searchCategory=whole&searchText=&pageSize=10&subjectID=&orderBy=orderByDate&orderAsc=DESC&input_sdate=1980&input_edate=1990&listType=list`;
+                  console.log(page, theUrl, 'in if')
+                  return scrapData(theUrl);
+              } else return //twit
+          });
+	  */
+
+/*
 scrapData(theUrl)
           .then((res) => {
               if (arr[0].order === 1) {
@@ -90,3 +155,4 @@ scrapData(theUrl)
                   return scrapData(theUrl);
               } else return //twit
           })
+	  */
