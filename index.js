@@ -28,9 +28,7 @@ let arts = {};
 let order = 0;
 let thisYear = new Date().getFullYear().toString();
 
-function scrapData(theUrl) {
-return axios.get(theUrl)
-    .then((res) =>{
+async function getList(res) {
         const $ = cheerio.load(res.data);      
         const list = '#container > div.bbs_basic_list2';        
         const classes = $(list).children();
@@ -69,7 +67,7 @@ return axios.get(theUrl)
         arts[order + 1].date = splitDate;
         arts[order + 1].exp = getExp;
 	}
-console.log(Date.parse(`${getFullYear}-${splitDate[1]}-${splitDate[2]}`) - Date.now())
+//console.log(Date.parse(`${getFullYear}-${splitDate[1]}-${splitDate[2]}`) - Date.now())
  	if (Date.parse(`${getFullYear}-${splitDate[1]}-${splitDate[2]}`) - Date.now() > 0) return false;		
 	        //console.log(classes)
         //console.log(length)
@@ -80,7 +78,12 @@ console.log(Date.parse(`${getFullYear}-${splitDate[1]}-${splitDate[2]}`) - Date.
         //console.log(date)
         }
         return true; 
-          })
+
+}
+
+async function scrapData(theUrl) {
+return await axios.get(theUrl)
+    .then((res) => getList(res))
 	.then((res) => {
 	                  page--;                  
 	  console.log(page)
