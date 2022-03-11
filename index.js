@@ -23,8 +23,7 @@ function rewriteUrl(page) {
 
 let page;
 	//2665;
-
-let theUrl = `https://www.ehistory.go.kr/page/photo/nation_index.jsp?page=${page}&yearCheck=&typeCheck=&searchCategory=whole&searchText=&pageSize=10&subjectID=&orderBy=orderByDate&orderAsc=DESC&input_sdate=1980&input_edate=1990&listType=list`
+let theUrl;
 let arts = {};
 let order = 0;
 let thisYear = new Date().getFullYear().toString();
@@ -58,9 +57,8 @@ return axios.get(theUrl)
 	let getFullYear = today.getFullYear();		
         let getDate = today.getDate();
         let getMonth = today.getMonth() + 1
-		console.log(splitDate);
-		console.log('targetDate:')
-		console.log(targetDate, parseInt(getDate), targetMonth, parseInt(getMonth))
+		//console.log(splitDate);
+		//console.log(targetDate, parseInt(getDate), targetMonth, parseInt(getMonth))
 	if (targetDate === parseInt(getDate) && targetMonth === parseInt(getMonth)) {		
 	order++;		
         //if (targetDate === getDate && targetMonth === getMonth) {}
@@ -79,7 +77,7 @@ console.log(Date.parse(`${getFullYear}-${splitDate[1]}-${splitDate[2]}`) - Date.
         console.log(getTitle)
         //console.log(getExp)
         console.log(getText)
-        console.log(date)
+        //console.log(date)
         }
         return true; 
           })
@@ -88,9 +86,9 @@ console.log(Date.parse(`${getFullYear}-${splitDate[1]}-${splitDate[2]}`) - Date.
 	  console.log(page)
 		console.log('day same', res);
                   theUrl = rewriteUrl(page);
-		  console.log(page, theUrl, 'in if')
+		  //console.log(page, theUrl, 'in if')
                   if (res) return scrapData(theUrl)
-		  else return;
+		  else return page + 1;
 	})
         }
 /*
@@ -107,22 +105,28 @@ console.log(Date.parse(`${getFullYear}-${splitDate[1]}-${splitDate[2]}`) - Date.
   */
 let serverUrl = 'http://hotisred.xyz';
 let lastPage = serverUrl + '/users/get_last';
+let postPage = serverUrl + '/users/create';
 
 async function getLastPage(lastPage) {
 return await axios.get(lastPage)
 	.then(res => {
 		console.log('from server:',res.data)
 		page = res.data.name;
-		return res.data.name;
+		theUrl = rewriteUrl(page);
+ 	return scrapData(theUrl)
 	})
 }
-getLastPage(lastPage)
-. then((res) => {
-	console.log(page)
-	page = res;
-	theUrl = rewriteUrl(page);
- 	return scrapData(theUrl)
+
+async function postPageNum(postPage, page) {
+return await axios.post(postPage, {
+  name: page 
 })
+  .then(res => console.log(res))
+  .catch(err => console.log('err while post', err));
+}
+
+getLastPage(lastPage);
+  .then(res => postPageNum(postPage, res);
 /*
           .then((res) => {
   let lastTime = arts[order].date;
